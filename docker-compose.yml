@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: blog-api-app
+        restart: unless-stopped
+        working_dir: /var/www/html
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - app-network
+
+    webserver:
+        image: nginx:alpine
+        container_name: blog-api-webserver
+        restart: unless-stopped
+        ports:
+            - "80:80"
+        volumes:
+            - ./:/var/www/html
+            - ./nginx/conf.d:/etc/nginx/conf.d
+        networks:
+            - app-network
+        depends_on:
+            - app
+
+    db:
+        image: mysql:8.0
+        container_name: blog-api-db
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: blog
+            MYSQL_USER: user
+            MYSQL_PASSWORD: temirlan
+        ports:
+            - "3307:3306"
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    dbdata:
